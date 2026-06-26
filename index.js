@@ -15,13 +15,27 @@ app.get('/', (req, res) => {
 });
 
 app.get('/books', (req, res) => {
-    if(books.length === 0) {
-        return res.status(404).json({
-            message: 'There are no books here'
+    const { genre } = req.query;
+
+    if(!genre) {
+        if(books.length === 0) {
+            return res.status(404).json({
+                message: 'There are no books here'
+            });
+        }
+        return res.status(200).json(books);
+    }
+
+    const filteredBooks = books.filter(book => 
+        book.genre.toLowerCase().includes(genre.toLowerCase())
+    );
+    if(filteredBooks.length === 0) {
+        res.status(404).json({
+            message: `No ${genre} books in the library`
         });
     }
 
-    res.status(200).json(books);
+    res.status(200).json(filteredBooks);
 });
 
 app.post('/books', (req, res) => {
