@@ -20,9 +20,9 @@ npm install
 npm run dev
 
 ## API Endpoints
-POST   /books        - Add a book
-GET    /books        - Get all books
-GET    /books/:id    - Get a book by ID
-PUT    /books/:id    - Update a book
-DELETE /books/:id    - Delete a book
-GET    /books?genre= - Filter by genre
+- POST   /books        - Add a book
+- GET    /books        - Get all books
+- GET    /books/:id    - Get a book by ID
+- PUT    /books/:id    - Update a book
+- DELETE /books/:id    - Delete a book
+- GET    /books?genre= - Filter by genre
