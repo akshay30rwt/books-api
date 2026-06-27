@@ -8,6 +8,7 @@ A REST API to manage library books built with Node.js, Express.js and MongoDB.
 - Get a book by ID
 - Update a book
 - Delete a book
+- Filter books by genre
 
 ## Tech Stack
 - Node.js
