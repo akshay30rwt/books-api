@@ -52,6 +52,31 @@ app.get('/books', async (req, res) => {
     }
 });
 
+app.get('/books/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const book = await Book.findById(id);
+        if(!book) {
+            return res.status(404).json({
+                message: `Book with ID: ${id} not found`
+            });
+        }
+
+        res.status(200).json(book);
+    }
+    catch(error) {
+        if(error.name === 'CastError') {
+            return res.status(400).json({
+                message: 'Invalid ID'
+            });
+        }
+        res.status(500).json({
+            message: error.message
+        });
+    }
+});
+
 app.post('/books', async (req, res) => {
     try {
         const { title, author, genre, year } = req.body;
@@ -72,20 +97,25 @@ app.post('/books', async (req, res) => {
 app.put('/books/:id', async (req, res) => {
     try {
         const { title, author, genre, year } = req.body;
-        const _id = req.params.id;
+        const { id } = req.params;
 
-        const updatedBook = await Book.findByIdAndUpdate(_id, { title, author, genre, year }, { new: true });
+        const updatedBook = await Book.findByIdAndUpdate(id, { title, author, genre, year }, { new: true });
         if(!updatedBook) {
             return res.status(404).json({
-                message: `Book with ID: ${_id} not found`
+                message: `Book with ID: ${id} not found`
             });
         }
 
         res.status(200).json({
-            message: `ID: ${updatedBook._id} | Title: '${updatedBook.title}', updated successfully`
+            message: `ID: ${updatedBook.id} | Title: '${updatedBook.title}', updated successfully`
         });
 
     } catch(error) {
+        if(error.name === 'CastError') {
+            return res.status(400).json({
+                message: 'Invalid ID'
+            });
+        }
         res.status(500).json({
             message: error.message
         });
@@ -94,12 +124,12 @@ app.put('/books/:id', async (req, res) => {
 
 app.delete('/books/:id', async (req, res) => {
     try {
-        const _id = req.params.id;
+        const { id } = req.params;
 
-        const deletedBook = await Book.findByIdAndDelete(_id);
+        const deletedBook = await Book.findByIdAndDelete(id);
         if(!deletedBook) {
             return res.status(404).json({
-                message: `Invalid ID: ${_id}`
+                message: `Invalid ID: ${id}`
             });
         }
 
@@ -109,6 +139,11 @@ app.delete('/books/:id', async (req, res) => {
         });
 
     } catch(error) {
+        if(error.name === 'CastError') {
+            return res.status(400).json({
+                message: 'Invalid ID'
+            });
+        }
         res.status(500).json({
             message: error.message
         });
