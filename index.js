@@ -20,74 +20,99 @@ app.get('/', (req, res) => {
 });
 
 app.get('/books', async (req, res) => {
-    const books = await Book.find();
-    const { genre } = req.query;
-    
-    if(!genre) {
-        if(books.length === 0) {
+    try {
+        const books = await Book.find();
+        const { genre } = req.query;
+        
+        if(!genre) {
+            if(books.length === 0) {
+                return res.status(404).json({
+                    message: 'There are no books in library'
+                });
+            }
+            return res.status(200).json(books);
+        }
+
+        const filteredBooks = books.filter(book =>
+            book.genre.toLowerCase().includes(genre.toLowerCase())
+        );
+
+        if(filteredBooks.length === 0) {
             return res.status(404).json({
-                message: 'There are no books in library'
+                message: `No ${genre} genre books in library`
             });
         }
-        return res.status(200).json(books);
-    }
 
-    const filteredBooks = books.filter(book =>
-         book.genre.toLowerCase().includes(genre.toLowerCase())
-    );
+        res.status(200).json(filteredBooks);
 
-    if(filteredBooks.length === 0) {
-        return res.status(404).json({
-            message: `No ${genre} genre books in library`
+    } catch(error) {
+        res.status(500).json({
+            message: error.message
         });
     }
-
-    return res.status(200).json(filteredBooks);
 });
 
 app.post('/books', async (req, res) => {
-    const { title, author, genre, year } = req.body;
-    const book = new Book({ title, author, genre, year });
-    await book.save();
+    try {
+        const { title, author, genre, year } = req.body;
+        const book = new Book({ title, author, genre, year });
+        await book.save();
 
-    res.status(201).json({
-        message: `Book '${title}' added to library`
-    });
-});
+        res.status(201).json({
+            message: `Book '${title}' added to library`
+        });
 
-app.put('/books/:id', (req, res) => {
-    const { title, genre } = req.body;
-    const bookId = Number(req.params.id);
-    const index = books.findIndex(book => book.id === bookId);
-
-    if(index === -1) {
-        return res.status(404).json({
-            message: `Book with ID: ${bookId} not found`
+    } catch(error) {
+        res.status(500).json({
+            message: error.message
         });
     }
-
-    books[index].title = title;
-    books[index].genre = genre;
-    
-    res.status(200).json({
-        message: `ID: ${bookId} | Title: ${title} updated successfully`
-    });
 });
 
-app.delete('/books/:id', (req, res) => {
-    const bookId = Number(req.params.id);
-    const index = books.findIndex(book => book.id === bookId);
+app.put('/books/:id', async (req, res) => {
+    try {
+        const { title, author, genre, year } = req.body;
+        const _id = req.params.id;
 
-    if(index === -1) {
-        return res.status(404).json({
-            message: `Book with ID: ${bookId} not found`
+        const updatedBook = await Book.findByIdAndUpdate(_id, { title, author, genre, year }, { new: true });
+        if(!updatedBook) {
+            return res.status(404).json({
+                message: `Book with ID: ${_id} not found`
+            });
+        }
+
+        res.status(200).json({
+            message: `ID: ${updatedBook._id} | Title: '${updatedBook.title}', updated successfully`
+        });
+
+    } catch(error) {
+        res.status(500).json({
+            message: error.message
         });
     }
-    const deletedBook = books[index];
-    books.splice(index, 1);
-    res.status(200).json({
-        message: `Book Title: ${deletedBook.title} deleted from the library`
-    });
+});
+
+app.delete('/books/:id', async (req, res) => {
+    try {
+        const _id = req.params.id;
+
+        const deletedBook = await Book.findByIdAndDelete(_id);
+        if(!deletedBook) {
+            return res.status(404).json({
+                message: `Invalid ID: ${_id}`
+            });
+        }
+
+        res.status(200).json({
+            message: 'Book deleted from library',
+            deletedBook
+        });
+
+    } catch(error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
 });
 
 app.listen(PORT, () => {
