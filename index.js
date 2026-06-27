@@ -1,55 +1,57 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const Book = require('./models/book');
 
 const app = express();
 app.use(express.json());
 
 const PORT = 3000;
 
-let books = [];
-let nextId = 1;
+mongoose.connect('mongodb://127.0.0.1:27017/bookdb').then(() => {
+    console.log('Connected to MongoDB');
+}).catch((err) => {
+    console.error('Connection failed', err);
+});
 
 app.get('/', (req, res) => {
     res.status(200).json({
-        message: 'Contacts API is running'
+        message: 'Books API is running'
     });
 });
 
-app.get('/books', (req, res) => {
+app.get('/books', async (req, res) => {
+    const books = await Book.find();
     const { genre } = req.query;
-
+    
     if(!genre) {
         if(books.length === 0) {
             return res.status(404).json({
-                message: 'There are no books here'
+                message: 'There are no books in library'
             });
         }
         return res.status(200).json(books);
     }
 
-    const filteredBooks = books.filter(book => 
-        book.genre.toLowerCase().includes(genre.toLowerCase())
+    const filteredBooks = books.filter(book =>
+         book.genre.toLowerCase().includes(genre.toLowerCase())
     );
+
     if(filteredBooks.length === 0) {
-        res.status(404).json({
-            message: `No ${genre} books in the library`
+        return res.status(404).json({
+            message: `No ${genre} genre books in library`
         });
     }
 
-    res.status(200).json(filteredBooks);
+    return res.status(200).json(filteredBooks);
 });
 
-app.post('/books', (req, res) => {
-    const { title, genre } = req.body;
-    const newBook = {
-        id: nextId,
-        title: title, 
-        genre: genre
-    }
-    nextId++;
+app.post('/books', async (req, res) => {
+    const { title, author, genre, year } = req.body;
+    const book = new Book({ title, author, genre, year });
+    await book.save();
 
-    books.push(newBook);
     res.status(201).json({
-        message: `Title: '${title}' book added to the library`
+        message: `Book '${title}' added to library`
     });
 });
 
